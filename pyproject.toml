@@ -1,0 +1,20 @@
+[project]
+name = "tools-for-agents"
+version = "0.1.0"
+description = "Open-source runtime tools for LLM agents - framework-agnostic, production-ready, with first-class documentation"
+readme = "README.md"
+authors = [
+    { name = "Harsh Rana", email = "hr23232323@gmail.com" }
+]
+requires-python = ">=3.12"
+dependencies = [
+    "pydantic>=2.0.0",
+    "requests>=2.31.0",
+    "openai>=1.0.0",  # Required for OpenRouter examples and schemas
+    "python-dotenv>=1.0.0",  # For .env file support
+]
+license = "MIT"
+
+[build-system]
+requires = ["uv_build>=0.9.21,<0.10.0"]
+build-backend = "uv_build"
