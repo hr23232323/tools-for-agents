@@ -106,47 +106,29 @@ for block in response.content:
 
 ## Available Tools
 
-### Google Search
-Let's search Google and get structured results back:
+| Tool | Description | Requirements | Docs |
+|------|-------------|--------------|------|
+| **GoogleSearchTool** | Search Google and get structured results | SerpAPI key | [View →](./src/tools_for_agents/tools/google_search/README.md) |
+| **WebFetchTool** | Fetch web page content as text or HTML | None (free) | [View →](./src/tools_for_agents/tools/web_fetch/README.md) |
+
+**[See full catalog →](./src/tools_for_agents/tools/CATALOG.md)**
+
+### Quick Example
 
 ```python
-from tools_for_agents import GoogleSearchTool
+from tools_for_agents import GoogleSearchTool, WebFetchTool
 
+# Search for pages
 search = GoogleSearchTool(api_key="serpapi-key")
-result = search.validate_and_execute(
-    query="Python asyncio tutorial",
-    num_results=5
-)
+results = search.validate_and_execute(query="Python tutorials", num_results=3)
 
-for r in result.results:
-    print(f"{r.position}. {r.title} - {r.url}")
-```
-
-**Note:** You'll need a SerpAPI key from https://serpapi.com/
-
-### Web Fetch
-Fetch web page content as cleaned text or raw HTML:
-
-```python
-from tools_for_agents import WebFetchTool
-
+# Fetch the first result
 fetch = WebFetchTool()
+page = fetch.validate_and_execute(url=results.results[0].url, mode="text")
 
-# Get clean, readable text
-result = fetch.validate_and_execute(
-    url="https://example.com",
-    mode="text"
-)
-print(result.content)
-
-# Or get raw HTML
-result = fetch.validate_and_execute(
-    url="https://example.com",
-    mode="html"
-)
+print(page.title)
+print(page.content)
 ```
-
-**Perfect pairing:** Use GoogleSearch to find URLs, then WebFetch to read their content.
 
 ## Creating Custom Tools
 
