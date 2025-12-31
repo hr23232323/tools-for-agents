@@ -13,7 +13,7 @@ import json
 from pathlib import Path
 from dotenv import load_dotenv
 from openai import OpenAI
-from tools_for_agents import GoogleSearchTool
+from tools_for_agents import GoogleSearchTool, WebFetchTool
 
 # Load environment variables from .env file in this directory
 # .env should be in the same directory as this script
@@ -32,9 +32,9 @@ DEFAULT_MODEL = "anthropic/claude-3.5-sonnet"
 
 class CompanyResearchAgent:
     """
-    Agent that researches companies using Google Search.
+    Agent that researches companies using Google Search and web page fetching.
 
-    The agent performs multiple searches to gather:
+    The agent searches for relevant pages, fetches their full content, and analyzes:
     - General company information
     - Recent news and developments
     - Products and services
@@ -63,9 +63,13 @@ class CompanyResearchAgent:
             api_key=openrouter_api_key or os.getenv("OPENROUTER_API_KEY"),
         )
         self.search_tool = GoogleSearchTool(api_key=serpapi_key or os.getenv("SERPAPI_API_KEY"))
+        self.fetch_tool = WebFetchTool()
 
-        # Get tool schema - OpenRouter uses OpenAI-compatible format
-        self.tools = [self.search_tool.to_openai_schema()]
+        # Get tool schemas - OpenRouter uses OpenAI-compatible format
+        self.tools = [
+            self.search_tool.to_openai_schema(),
+            self.fetch_tool.to_openai_schema()
+        ]
 
     def research_company(self, company_name: str) -> str:
         """
@@ -82,17 +86,20 @@ class CompanyResearchAgent:
         print(f"{'='*60}\n")
 
         # System message for the agent
-        system_prompt = """You are a company research analyst. Your job is to research companies thoroughly using web search.
+        system_prompt = """You are a company research analyst. Your job is to research companies thoroughly using web search and content fetching.
 
-For each company, you should:
-1. Search for general information about the company (what they do, when founded, etc.)
-2. Search for recent news and developments
-3. Search for their main products or services
-4. Search for funding, revenue, or financial information
+Your research workflow:
+1. Use google_search to find relevant pages about the company
+2. Use web_fetch to read the full content of the most relevant URLs (usually 2-3 key pages)
+3. Analyze the full content to extract detailed, accurate information
 
-After gathering information, compile a well-structured research report with clear sections.
+For each company, gather:
+- General information (what they do, when founded, leadership)
+- Recent news and developments
+- Main products or services
+- Funding, revenue, or financial information
 
-Use the google_search tool multiple times to gather comprehensive information."""
+After gathering information from actual web pages, compile a well-structured research report with clear sections and specific details."""
 
         messages = [
             {"role": "system", "content": system_prompt},
@@ -126,34 +133,66 @@ Use the google_search tool multiple times to gather comprehensive information.""
 
             # Execute each tool call
             for tool_call in message.tool_calls:
+                tool_name = tool_call.function.name
                 args = json.loads(tool_call.function.arguments)
-                print(f"🔍 Searching: {args.get('query', '')}")
 
-                # Execute the search
                 try:
-                    result = self.search_tool.validate_and_execute(**args)
-                    print(f"   → Found {len(result.results)} results\n")
+                    if tool_name == "google_search":
+                        print(f"🔍 Searching: {args.get('query', '')}")
+                        result = self.search_tool.validate_and_execute(**args)
+                        print(f"   → Found {len(result.results)} results\n")
 
-                    # Format results for the model
-                    formatted_results = {
-                        "total_results": result.total_results,
-                        "results": [
-                            {
-                                "position": r.position,
-                                "title": r.title,
-                                "url": r.url,
-                                "snippet": r.snippet
-                            }
-                            for r in result.results
-                        ]
-                    }
+                        # Format results for the model
+                        formatted_results = {
+                            "total_results": result.total_results,
+                            "results": [
+                                {
+                                    "position": r.position,
+                                    "title": r.title,
+                                    "url": r.url,
+                                    "snippet": r.snippet
+                                }
+                                for r in result.results
+                            ]
+                        }
 
-                    # Add tool result to messages
-                    messages.append({
-                        "role": "tool",
-                        "tool_call_id": tool_call.id,
-                        "content": json.dumps(formatted_results)
-                    })
+                        messages.append({
+                            "role": "tool",
+                            "tool_call_id": tool_call.id,
+                            "content": json.dumps(formatted_results)
+                        })
+
+                    elif tool_name == "web_fetch":
+                        url = args.get('url', '')
+                        # Truncate long URLs for display
+                        display_url = url if len(url) < 50 else url[:47] + "..."
+                        print(f"📄 Fetching: {display_url}")
+
+                        result = self.fetch_tool.validate_and_execute(**args)
+                        content_preview = result.content[:100] + "..." if len(result.content) > 100 else result.content
+                        print(f"   → Got {len(result.content)} chars ({result.mode} mode)\n")
+
+                        # Format result for the model
+                        formatted_result = {
+                            "url": result.url,
+                            "title": result.title,
+                            "content": result.content,
+                            "mode": result.mode
+                        }
+
+                        messages.append({
+                            "role": "tool",
+                            "tool_call_id": tool_call.id,
+                            "content": json.dumps(formatted_result)
+                        })
+
+                    else:
+                        print(f"   ✗ Unknown tool: {tool_name}")
+                        messages.append({
+                            "role": "tool",
+                            "tool_call_id": tool_call.id,
+                            "content": json.dumps({"error": f"Unknown tool: {tool_name}"})
+                        })
 
                 except Exception as e:
                     print(f"   ✗ Error: {e}")

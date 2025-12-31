@@ -1,15 +1,16 @@
 # Company Research Agent
 
-An autonomous agent that researches companies using web search and compiles comprehensive reports.
+An autonomous agent that researches companies by searching the web and reading full page content.
 
 ## What It Does
 
 Give it a company name, and it will:
-1. Search for general company information
-2. Find recent news and developments
-3. Identify products and services
-4. Gather financial information
-5. Compile everything into a structured report
+1. Search for relevant pages using Google
+2. Fetch and read the full content of key pages
+3. Extract detailed information about the company
+4. Compile everything into a comprehensive report
+
+**Why this works:** The agent doesn't just rely on search snippets - it reads actual web pages to get complete, accurate information.
 
 ## Quick Start
 
@@ -62,8 +63,9 @@ The agent autonomously decides how many searches to perform and what to search f
 - Guides the report structure
 
 **Tool Integration**
-- Uses `GoogleSearchTool` from `tools-for-agents`
-- Generates OpenAI-compatible schema automatically
+- Uses `GoogleSearchTool` and `WebFetchTool` from `tools-for-agents`
+- Searches for pages, then fetches their content
+- Generates OpenAI-compatible schemas automatically
 - Handles errors gracefully
 
 ## Switching Models
@@ -152,13 +154,16 @@ Anthropic is an AI safety company founded in 2021...
 
 ## Design Insights
 
-**Multiple focused searches work better** - We found that specific queries return better results than broad searches.
+**Search + Fetch = Better reports** - Reading full page content instead of just search snippets gives the agent complete, accurate information to work with.
 
-**Safety mechanisms matter** - The max turns limit prevents infinite loops, and error handling ensures the agent continues even when searches fail.
+**Multiple focused searches work better** - Specific queries return better results than broad searches.
+
+**Safety mechanisms matter** - The max turns limit prevents infinite loops, and error handling ensures the agent continues even when tool calls fail.
 
 **Using `tools-for-agents` eliminates boilerplate** - You don't need to write:
 - SerpAPI integration code
-- Error handling logic
+- Web fetching and HTML parsing logic
+- Error handling for network requests
 - Schema definitions
 - Input/output validation
 
@@ -166,14 +171,14 @@ Anthropic is an AI safety company founded in 2021...
 
 **Add more tools:**
 ```python
-from tools_for_agents import GoogleSearchTool, CompanyDatabaseTool
+from tools_for_agents import GoogleSearchTool, WebFetchTool
 
 search = GoogleSearchTool(api_key="...")
-database = CompanyDatabaseTool(api_key="...")
+fetch = WebFetchTool()
 
 tools = [
     search.to_openai_schema(),
-    database.to_openai_schema()
+    fetch.to_openai_schema()
 ]
 ```
 

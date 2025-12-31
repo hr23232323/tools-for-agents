@@ -7,7 +7,7 @@ from .exceptions import (
     RateLimitError,
     ValidationError,
 )
-from .tools import GoogleSearchTool
+from .tools import GoogleSearchTool, WebFetchTool
 
 __version__ = "0.1.0"
 
@@ -18,4 +18,5 @@ __all__ = [
     "RateLimitError",
     "ValidationError",
     "GoogleSearchTool",
+    "WebFetchTool",
 ]

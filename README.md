@@ -124,6 +124,30 @@ for r in result.results:
 
 **Note:** You'll need a SerpAPI key from https://serpapi.com/
 
+### Web Fetch
+Fetch web page content as cleaned text or raw HTML:
+
+```python
+from tools_for_agents import WebFetchTool
+
+fetch = WebFetchTool()
+
+# Get clean, readable text
+result = fetch.validate_and_execute(
+    url="https://example.com",
+    mode="text"
+)
+print(result.content)
+
+# Or get raw HTML
+result = fetch.validate_and_execute(
+    url="https://example.com",
+    mode="html"
+)
+```
+
+**Perfect pairing:** Use GoogleSearch to find URLs, then WebFetch to read their content.
+
 ## Creating Custom Tools
 
 You can extend `BaseTool` to create your own tools:

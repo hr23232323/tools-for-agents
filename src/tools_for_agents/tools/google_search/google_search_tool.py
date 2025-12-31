@@ -5,8 +5,8 @@ from typing import List
 import requests
 from pydantic import BaseModel, Field
 
-from ..base import BaseTool
-from ..exceptions import AuthenticationError, RateLimitError, ToolExecutionError
+from ...base import BaseTool
+from ...exceptions import AuthenticationError, RateLimitError, ToolExecutionError
 
 
 class GoogleSearchInput(BaseModel):
