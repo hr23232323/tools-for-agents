@@ -82,7 +82,7 @@ class WebFetchTool(BaseTool[WebFetchInput, WebFetchOutput]):
         try:
             # Fetch the page
             headers = {
-                "User-Agent": "Mozilla/5.0 (compatible; tools-for-agents/0.1.0; +https://github.com/yourusername/tools-for-agents)"
+                "User-Agent": "Mozilla/5.0 (compatible; tools-for-agents/0.1.0;"
             }
 
             response = requests.get(

@@ -5,7 +5,7 @@ Open-source runtime tools for LLM agents. We built this to be framework-agnostic
 ## Quick Start
 
 ```bash
-git clone https://github.com/yourusername/tools-for-agents.git
+git clone https://github.com/hr23232323/tools-for-agents.git
 cd tools-for-agents/examples/company_research_agent
 cp .env.example .env
 # Edit .env with your API keys
